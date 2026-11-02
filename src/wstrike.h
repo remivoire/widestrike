@@ -11,7 +11,7 @@
 #include <string.h>
 
 #define WS_NAME        "WideStrike"
-#define WS_VERSION     "0.1.0"
+#define WS_VERSION     "1.0.0"
 #define WS_TARGET_EXE  "jsf.exe"
 #define WS_TARGET_SIZE 1072128u
 #define WS_IMAGE_BASE  0x400000u
