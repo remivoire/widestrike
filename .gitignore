@@ -1,0 +1,15 @@
+# build output
+build/
+*.o
+*.obj
+*.dll
+*.exe
+
+# runtime artifacts
+*.log
+
+# editor / OS noise
+.vscode/
+.idea/
+Thumbs.db
+desktop.ini

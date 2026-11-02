@@ -1,0 +1,7 @@
+; WideStrike compatibility stub - DPLAYX.dll export table.
+; jsf.exe imports DPLAYX ordinal 4 (DirectPlayLobbyCreateA), so the stub
+; function has to exist at exactly that ordinal.
+LIBRARY DPLAYX
+
+EXPORTS
+    dplayx_ord4 @4
