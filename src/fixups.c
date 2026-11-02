@@ -69,3 +69,42 @@ int ws_patch_force_software(void)
     ws_log("mode : 3dfx renderer disabled (software only)");
     return 1;
 }
+
+/*
+ * sub_42BD80 - "restore the back buffer from the primary".
+ *
+ * It is called immediately after PresentFrame (0x430AB4, 0x430EF0, 0x4310FB,
+ * 0x43194F) and copies 2*GetScreenWidth() bytes per row from the locked
+ * primary into the locked back buffer, for GetScreenHeight() rows.
+ *
+ * That is an identity copy only while primary and back buffer are the same
+ * surface size, i.e. in the original 640x480 fullscreen flipping mode, where
+ * a Flip leaves the back buffer holding the old front buffer.
+ *
+ * WideStrike never flips: it presents with Blt from a 640x480 RGB565 offscreen
+ * onto a desktop-sized primary.  The back buffer already holds the frame, and
+ * the grab instead copies the top-left 640x480 of the stretched desktop image
+ * back over it - which is a 3x magnified crop of the menu background.  The
+ * first subsequent present then pushes that crop to the screen, which is the
+ * "menu turns into a blue blocky mess when the mouse moves" bug.
+ *
+ * Nothing in the windowed path needs the grab, so return immediately.
+ */
+int ws_patch_screengrab(void)
+{
+    const BYTE *p = (const BYTE *)(g_base + RVA_SCREENGRAB);
+
+    /* expect the standard frame-pointer prologue: 55 8B EC 83 EC 28 57 57 */
+    if (p[0] != 0x55 || p[1] != 0x8B || p[2] != 0xEC) {
+        ws_log("!! screen-grab prologue mismatch, screengrab skipped");
+        return 0;
+    }
+    if (!ws_verify_bytes(RVA_SCREENGRAB, "\x55", 1)) return 0;
+
+    {
+        BYTE ret = 0xC3;
+        if (!ws_write(RVA_SCREENGRAB, &ret, 1)) return 0;
+    }
+    ws_log("disp : primary->backbuffer grab disabled (windowed present)");
+    return 1;
+}

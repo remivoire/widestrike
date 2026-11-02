@@ -16,6 +16,9 @@ ws_config g_cfg = {
     1,      /* cd_check       */
     1,      /* windowed       */
     1,      /* force_desktop  */
+    1,      /* harden         */
+    1,      /* present        */
+    1,      /* fmt565         */
     1,      /* aspect         */
     0,      /* render_w       */
     0,      /* render_h       */
@@ -119,6 +122,9 @@ void ws_config_load(const char *dir)
         else if (!_stricmp(key, "cd_check"))        g_cfg.cd_check = ws_atoi(val);
         else if (!_stricmp(key, "windowed"))        g_cfg.windowed = ws_atoi(val);
         else if (!_stricmp(key, "force_desktop"))   g_cfg.force_desktop = ws_atoi(val);
+        else if (!_stricmp(key, "harden"))         g_cfg.harden = ws_atoi(val);
+        else if (!_stricmp(key, "present"))        g_cfg.present = ws_atoi(val);
+        else if (!_stricmp(key, "fmt565"))         g_cfg.fmt565 = ws_atoi(val);
         else if (!_stricmp(key, "aspect"))          g_cfg.aspect = ws_atoi(val);
         else if (!_stricmp(key, "render_w"))        g_cfg.render_w = ws_atoi(val);
         else if (!_stricmp(key, "render_h"))        g_cfg.render_h = ws_atoi(val);

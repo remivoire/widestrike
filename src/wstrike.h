@@ -11,7 +11,7 @@
 #include <string.h>
 
 #define WS_NAME        "WideStrike"
-#define WS_VERSION     "1.0.0"
+#define WS_VERSION     "1.0.1"
 #define WS_TARGET_EXE  "jsf.exe"
 #define WS_TARGET_SIZE 1072128u
 #define WS_IMAGE_BASE  0x400000u
@@ -33,6 +33,7 @@
 #define RVA_FN_ENUM_CB       0xB0B50u   /* sub_4B0B50 - DDraw mode callback    */
 
 #define RVA_FORCE_SW_JNZ     0x19C08u   /* jnz 3dfx-mode @ 0x419C08            */
+#define RVA_SCREENGRAB       0x2BD80u   /* sub_42BD80 - primary->back grab     */
 
 /* --- modern display path (src/present.c) --------------------------- */
 #define RVA_CD_CHECK         0x17490u   /* sub_417490 - CD volume probe        */
@@ -89,6 +90,9 @@ typedef struct ws_config {
     int cd_check;         /* 1 = bypass the CD volume label probe  */
     int windowed;         /* 1 = borderless 16bpp->32bpp present   */
     int force_desktop;    /* 1 = render at desktop resolution      */
+    int harden;           /* 1 = row table margin (crash fix)      */
+    int present;          /* 1 = scaler blit, 0 = engine BltFast   */
+    int fmt565;           /* 1 = install RGB565 format globals     */
     int aspect;           /* 1 = stretch to window, 2 = pillarbox  */
     int render_w;         /* 0 = desktop, else forced render width */
     int render_h;         /* 0 = desktop, else forced render height*/
@@ -121,6 +125,7 @@ void ws_on_first_frame(void);
 int  ws_patch_projection(void);
 int  ws_patch_modes(void);
 int  ws_patch_clip_guards(void);
+int  ws_patch_screengrab(void);
 int  ws_patch_force_software(void);
 int  ws_patch_cd_check(void);
 int  ws_patch_windowed(void);

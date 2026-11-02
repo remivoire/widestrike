@@ -86,8 +86,9 @@ static void ws_bootstrap(void)
     ws_patch_modes();
     ws_patch_mode_lookup();
     ws_patch_mode_count();
-    ws_patch_span_guards();
+    if (g_cfg.harden) ws_patch_span_guards(); else ws_log("harden: span guards disabled by config");
     ws_patch_clip_guards();
+    ws_patch_screengrab();
     ws_patch_projection();
 
     ws_log("hud    : left untouched - HUD/menu art is drawn at native pixel");

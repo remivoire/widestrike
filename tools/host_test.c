@@ -59,7 +59,7 @@ int main(int argc, char **argv)
     if (!apply) { printf("ws_test_apply not exported\n"); return 1; }
 
     n = apply(himg);
-    printf("patched  : bitmask 0x%X (expect 0x3FF, all 10 groups)\n", n);
+    printf("patched  : bitmask 0x%X (expect 0x7FF, all 11 groups)\n", n);
 
     {
         BYTE *img = (BYTE *)himg;
@@ -72,6 +72,7 @@ int main(int argc, char **argv)
         check(img, 0x17490, "cd probe (33 c0 c3)");
         check(img, 0xAA5E9, "window flag (b8 00 00 00 00)");
         check(img, 0xB0F2C, "16bpp guard (nop x5)");
+        check(img, 0x2BD80, "screen grab disabled (c3)");
 
         if (img[0x1BFE2] != 0xE8)                        { printf("  !! call not redirected\n"); fails++; }
         if (img[0xB16DD] == 0x50 && img[0xB16DE] == 0x0B &&
@@ -83,7 +84,8 @@ int main(int argc, char **argv)
         if (img[0x17490] != 0x33 || img[0x17492] != 0xC3) { printf("  !! cd probe not stubbed\n"); fails++; }
         if (img[0xAA5EA] != 0x00)                          { printf("  !! window flag not cleared\n"); fails++; }
         if (img[0xB0F2C] != 0x90)                         { printf("  !! 16bpp guard not removed\n"); fails++; }
-        if (n != 0x3FF)                                    { printf("  !! not every patch group applied\n"); fails++; }
+        if (img[0x2BD80] != 0xC3)                         { printf("  !! screen grab not disabled\n"); fails++; }
+        if (n != 0x7FF)                                    { printf("  !! not every patch group applied\n"); fails++; }
     }
 
     printf("\n%s\n", fails ? "FAILED" : "OK");

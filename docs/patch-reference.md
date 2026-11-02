@@ -21,6 +21,7 @@ All RVAs are relative to the image base `0x400000`.
 | `0x50345` | `0x450345` | 1 | `8F` | `87` | " |
 | `0x50E7F` | `0x450E7F` | 1 | `8F` | `87` | " |
 | `0x50E99` | `0x450E99` | 1 | `8F` | `87` | " |
+| `0x2BD80` | `0x42BD80` | 1 | `55` (`push ebp`) | `C3` (`ret`) | disable the primary -> back-buffer grab; it is only an identity copy when primary and back buffer are the same size, which is never true in windowed mode |
 
 ## Code hooks (5-byte `E9` jump, or redirected call)
 

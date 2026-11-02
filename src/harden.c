@@ -44,28 +44,30 @@
 
 void ws_harden_row_table(void)
 {
-    typedef void *(*getbuf_t)(void);
-    typedef int   (*getint_t)(void);
     void        **tab  = (void **)(g_base + RVA_ROWPTR);
-    uintptr_t     base;
-    int           h, pitch_px, i;
+    int           h, i;
     void         *last;
     static int    logged;
 
+    if (!g_cfg.harden) return;
+
     h = ws_screen_h();
-    if (h <= 0 || h >= ROW_TABLE_ENTRIES) return;
+    if (h <= 1 || h >= ROW_TABLE_ENTRIES) return;
 
-    base     = (uintptr_t)((getbuf_t)(g_base + RVA_GET_BUF))();
-    pitch_px = ((getint_t)(g_base + RVA_GET_PITCH))();
-    if (!base || pitch_px <= 0) return;
-
-    last = (void *)(base + (uintptr_t)(h - 1) * (uintptr_t)pitch_px * 2u);
+    /* Take the pointer the engine itself just wrote for the last real scanline
+     * instead of recomputing one from getters whose roles are ambiguous
+     * (sub_4B1CA0 is the primary in some paths, the back buffer in others).
+     * Recomputing produced bogus pointers, which anything indexing a scanline
+     * past `height` would then draw through. */
+    last = tab[h - 1];
+    if (!last) return;
 
     for (i = h; i < ROW_TABLE_ENTRIES; i++)
         tab[i] = last;
 
     if (!logged) {
-        ws_log("harden: row table margin [%d..%d] -> last scanline", h, ROW_TABLE_ENTRIES - 1);
+        ws_log("harden: row table margin [%d..%d] -> last scanline %p",
+               h, ROW_TABLE_ENTRIES - 1, last);
         logged = 1;
     }
 }

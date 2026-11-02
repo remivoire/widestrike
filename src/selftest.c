@@ -36,6 +36,7 @@ int ws_test_apply(void *image_base)
     if (ws_patch_cd_check())       applied |= 0x10;
     if (ws_patch_windowed())       applied |= 0x20;
     if (ws_patch_ddraw_hook())     applied |= 0x40;
+    if (ws_patch_screengrab())     applied |= 0x400;
     g_base   = save_base;
     g_active = save_active;
     return applied;

@@ -69,8 +69,9 @@ static bltfast_t       g_bltfast;
 static void           *g_primary;
 static int             g_hooked_dd;
 static int             g_hooked_bltfast;
-static int             g_logged_blt;
+static int             g_blt_count;
 static int             g_borderless_done;
+
 
 /* --------------------------------------------------------------- 565 */
 
@@ -81,6 +82,11 @@ static void ws_set_565_format(void)
      * dword_C4192C = { g_shift, b_shift }                              */
     DWORD masks  = (5u) | (6u << 8) | (5u << 16) | (11u << 24);  /* 0x0B050605 */
     DWORD shifts = (5u) | (0u << 8);                             /* 5          */
+
+    if (!g_cfg.fmt565) {
+        ws_log("disp : RGB565 format globals left alone (fmt565=0)");
+        return;
+    }
 
     ws_write(RVA_FMT_MASKS, &masks, 4);
     ws_write(RVA_FMT_SHIFTS, &shifts, 4);
@@ -154,6 +160,11 @@ static HRESULT __stdcall ws_bltfast(void *self, DWORD x, DWORD y, void *src, REC
     if (self != g_primary || !src || !g_bltfast)
         return g_bltfast(self, x, y, src, srcrc, trans);
 
+    /* present=0 passes the engine's own BltFast through untouched (diagnostic):
+     * the frame then lands unscaled in the top-left corner. */
+    if (!g_cfg.present)
+        return g_bltfast(self, x, y, src, srcrc, trans);
+
     vt  = *(void ***)self;
     blt = (blt_t)vt[VTBL_INDEX_BLT];
     if (!blt)
@@ -163,6 +174,7 @@ static HRESULT __stdcall ws_bltfast(void *self, DWORD x, DWORD y, void *src, REC
      * the primary surface, otherwise Blt returns DDERR_INVALIDRECT and
      * nothing is drawn (black screen with working audio). */
     hwnd = *(HWND *)(g_base + RVA_MAIN_HWND);
+
     if (hwnd && !g_borderless_done) {
         g_borderless_done = 1;
         ws_make_borderless(hwnd);
@@ -240,22 +252,23 @@ static HRESULT __stdcall ws_bltfast(void *self, DWORD x, DWORD y, void *src, REC
     }
 
     if (SUCCEEDED(hr)) {
-        if (!g_logged_blt) {
-            ws_log("disp : present %ldx%ld -> (%ld,%ld)-(%ld,%ld) via Blt",
+        if (g_blt_count < 20) {
+            ws_log("disp : present #%d %ldx%ld -> (%ld,%ld)-(%ld,%ld) hr=0",
+                   g_blt_count,
                    srcrc ? (long)(srcrc->right - srcrc->left) : -1L,
                    srcrc ? (long)(srcrc->bottom - srcrc->top) : -1L,
                    (long)dst.left, (long)dst.top, (long)dst.right, (long)dst.bottom);
-            g_logged_blt = 1;
         }
+        g_blt_count++;
         return hr;
     }
 
-    if (!g_logged_blt) {
-        ws_log("!! Blt failed hr=%08X (dst %ld,%ld-%ld,%ld, client %ldx%ld)",
-               (unsigned)hr, (long)dst.left, (long)dst.top, (long)dst.right, (long)dst.bottom,
-               (long)cr.right, (long)cr.bottom);
-        g_logged_blt = 1;
+    if (g_blt_count < 20) {
+        ws_log("!! Blt failed #%d hr=%08X (dst %ld,%ld-%ld,%ld, client %ldx%ld)",
+               g_blt_count, (unsigned)hr, (long)dst.left, (long)dst.top,
+               (long)dst.right, (long)dst.bottom, (long)cr.right, (long)cr.bottom);
     }
+    g_blt_count++;
     return g_bltfast(self, x, y, src, srcrc, trans);
 }
 
@@ -320,6 +333,7 @@ static HRESULT __stdcall ws_create_surface(void *self, DWORD *desc, void **surf,
            w, h, (unsigned)flags, (unsigned)caps, (unsigned)hr,
            (desc && (desc[DDSD_OFF_FLAGS] & DDSD_PIXELFORMAT) &&
             !(flags & DDSD_PIXELFORMAT)) ? " [565]" : "");
+
     return hr;
 }
 
